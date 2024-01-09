@@ -66,7 +66,7 @@ def method1(table, alpha, betta, n, Q):
             length = 0
             Qplus = Q
 
-            while True:
+            for ant in range(len(nextCity)):
                 summ = 0
                 for dista_freo in table_to_use[current_row]:
                     if not (dista_freo[0] == 0):
@@ -119,26 +119,23 @@ def method1(table, alpha, betta, n, Q):
                     length += table[int(route.strip().split(" ")[-1])][counting][0]
                     route += str(counting) + " "
 
-                if availible(table_to_use):
-                    current_row = counting
-                else:
-                    length += table[int(route.strip().split(" ")[0])][index][0]
-                    route += str(index)
+                current_row = counting
+            length += table[int(route.strip().split(" ")[0])][index][0]
+            route += str(index)
 
-                    routes.append(route)
+            routes.append(route)
 
-                    if best_length > length:
-                        best_length = length
-                        best_route = route
-                        print(best_length)
-                        # if length <= 7235:
-                        #     Qplus *= 2
-                    if not (iteration % 4 == 0) or (iteration == 0):
-                        amountOfFeromonToAdd.append(Qplus / length)
-                    else:
-                        amountOfFeromonToAdd.append(Qplus * 1.4 / length)
+            if best_length > length:
+                best_length = length
+                best_route = route
+                print(best_length)
+                # if length <= 7235:
+                #     Qplus *= 2
+            if not (iteration % 4 == 0) or (iteration == 0):
+                amountOfFeromonToAdd.append(Qplus / length)
+            else:
+                amountOfFeromonToAdd.append(Qplus * 1.4 / length)
 
-                    break
 
         updateferomon(table, routes, amountOfFeromonToAdd)
 
