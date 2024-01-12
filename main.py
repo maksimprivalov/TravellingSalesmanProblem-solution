@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 
 def build_source_table(filename):
-    sourcemassive = []
+    source_massive = []
 
     with open(filename, 'r') as file:
         lines = file.readlines()
@@ -19,108 +19,98 @@ def build_source_table(filename):
                 from_city_to_others.append(
                     [math.sqrt((float(elements1[1]) - float(elements2[1])) ** 2
                                + (float(elements1[2]) - float(elements2[2])) ** 2), 0.5])
-            sourcemassive.append(from_city_to_others)
+            source_massive.append(from_city_to_others)
 
-    return sourcemassive
-
-
-def availible(table):
-    for row in table:
-        for P in row:
-            if P[0] > 0:
-                return True
-    return False
+    return source_massive
 
 
 def updateferomon(table, routes, amountOfFeromonToAdd):
     for row in table:
         for element in row:
-            element[1] *= 0.8
-            if element[1] < 0.5:
-                element[1] = 0.5
+            element[1] *= 0.7  # Just 80% of feromon will stay
+            if element[1] < 0.1:  # If the way has < 0.1 feromon, add feromon up to 0.1 (MMAS)
+                element[1] = 0.1
 
-    for index, route in enumerate(routes):
-        route_arr = route.strip().split(" ")
+    for index, route in enumerate(routes):  # Massive of routes
+
+        route_arr = route.strip().split(" ")  # One route -> massive (eg 0 9 3 13 50 23... 0)
+
         for i in range(len(route_arr)):
             if i > 0:
-                table[int(route_arr[i - 1])][int(route_arr[i])][1] += amountOfFeromonToAdd[index]
-                table[int(route_arr[i])][int(route_arr[i - 1])][1] += amountOfFeromonToAdd[index]
+                table[int(route_arr[i - 1])][int(route_arr[i])][1] += amountOfFeromonToAdd[index]  # Add feromon
+                table[int(route_arr[i])][int(route_arr[i - 1])][1] += amountOfFeromonToAdd[index]  # Add feromon
 
-    return table
+    return table  # Returns the edited table
 
 
-def method1(table, alpha, betta, n, Q):
+def solve(table, alpha, betta, n, Q):
     best_route = ""
     best_length = math.inf
 
-    for iteration in range(200):
+    for iteration in range(250):
         routes = []
         amountOfFeromonToAdd = []
 
         for index, nextCity in enumerate(table):
 
             table_to_use = copy.deepcopy(table)
-            cities = []
+            probabilities = []
             current_row = index
             route = str(current_row) + " "
             length = 0
-            Qplus = Q
 
             for ant in range(len(nextCity)):
                 summ = 0
+
+                # Counting the probabilities of choosing local destination
                 for dista_freo in table_to_use[current_row]:
                     if not (dista_freo[0] == 0):
-                        summ += (n / (dista_freo[0])) ** alpha * dista_freo[1] ** betta
+                        summ += (n / (dista_freo[0])) ** betta * dista_freo[1] ** alpha
 
                 for dista_freo in table_to_use[current_row]:
                     if not (dista_freo[0] == 0):
-                        w = (n / (dista_freo[0])) ** alpha
-                        r = dista_freo[1] ** betta
-                        cities.append((w * r) / summ)
+                        w = (n / (dista_freo[0])) ** betta
+                        r = dista_freo[1] ** alpha
+                        probabilities.append((w * r) / summ)
                     else:
-                        cities.append(0)
+                        probabilities.append(0)
 
                 counting = 0
                 if not (iteration % 4 == 0) or (iteration == 0):  # Simple ants
                     random_number = random.uniform(0, 1)
 
-                    for index_local, city in enumerate(cities):
-                        counting += city
+                    for index_local, probability in enumerate(probabilities):
+                        counting += probability
+
                         if random_number <= counting:
                             counting = index_local
-
-                            for iii, delete_column in enumerate(table_to_use):  # Cleaning the column with this element
-                                table_to_use[iii][current_row][0] = 0
-
-                            for iii, delete_row in enumerate(table_to_use[current_row]):  # Cleaning the column with
-                                # this element
-                                table_to_use[current_row][iii][0] = 0
-
-                            cities = []
+                            probabilities = []
                             length += table[int(route.strip().split(" ")[-1])][counting][0]
                             route += str(counting) + " "
                             break
 
                 else:  # Elite ones
-                    best_destination = cities[0]
-                    for index_local, city in enumerate(cities):
-                        if city >= best_destination:
-                            best_destination = city
+                    best_destination = probabilities[0]
+                    for index_local, probability in enumerate(probabilities):
+                        if probability >= best_destination:
+                            best_destination = probability
                             counting = index_local
 
-                    for iii, delete_column in enumerate(table_to_use):  # Cleaning the column with this element
-                        table_to_use[iii][current_row][0] = 0
-
-                    for iii, delete_row in enumerate(
-                            table_to_use[current_row]):  # Cleaning the column with this element!!!!!
-                        table_to_use[current_row][iii][0] = 0
-
-                    cities = []
+                    probabilities = []
                     length += table[int(route.strip().split(" ")[-1])][counting][0]
                     route += str(counting) + " "
 
+                # Cleaning the column with the element we chose as a local destination
+                for iii, delete_column in enumerate(table_to_use):
+                    table_to_use[iii][current_row][0] = 0
+
+                # Cleaning the row with the element we chose as a local destination
+                for iii, delete_row in enumerate(table_to_use[current_row]):
+                    table_to_use[current_row][iii][0] = 0
+
                 current_row = counting
-            length += table[int(route.strip().split(" ")[0])][index][0]
+
+            length += table[int(route.strip().split(" ")[0])][index][0]  # Going back
             route += str(index)
 
             routes.append(route)
@@ -129,13 +119,11 @@ def method1(table, alpha, betta, n, Q):
                 best_length = length
                 best_route = route
                 print(best_length)
-                # if length <= 7235:
-                #     Qplus *= 2
-            if not (iteration % 4 == 0) or (iteration == 0):
-                amountOfFeromonToAdd.append(Qplus / length)
-            else:
-                amountOfFeromonToAdd.append(Qplus * 1.4 / length)
 
+            if not (iteration % 4 == 0) or (iteration == 0):
+                amountOfFeromonToAdd.append(Q / length)
+            else:
+                amountOfFeromonToAdd.append(Q * 1.7 / length)  # If this ant is "elite", add more feromon
 
         updateferomon(table, routes, amountOfFeromonToAdd)
 
@@ -145,8 +133,8 @@ def method1(table, alpha, betta, n, Q):
 if __name__ == '__main__':
 
     table = build_source_table('data_tsp.txt')
-    final_length, route = method1(table, 4, 1.0, 200, 240)
-    print("\n!For de-bag only!\nBest ant-trip-length: ", final_length, " Best ant-trip:\n", route, "\n")
+    final_length, route = solve(table, 1.0, 4.0, 100, 320)
+    print("\nBest ant-trip-length: ", final_length, " Best ant-trip:\n", route, "\n")
 
     points_array = []
 
@@ -168,8 +156,9 @@ if __name__ == '__main__':
         plt.legend()
         plt.show()
 
-        for row in table:
-            print(row)
+        # To see the result-table:
+        # for row in table:
+        #     print(row)
 
     city_indices = list(map(int, route.strip().split()))
     route_points = [points_array[index] for index in city_indices]
