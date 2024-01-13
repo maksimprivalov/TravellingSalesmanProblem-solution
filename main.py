@@ -26,10 +26,10 @@ def build_source_table(filename):
 
 def updateferomon(table, routes, amountOfFeromonToAdd):
     for row in table:
-        for element in row:
-            element[1] *= 0.7  # Just 80% of feromon will stay
-            if element[1] < 0.1:  # If the way has < 0.1 feromon, add feromon up to 0.1 (MMAS)
-                element[1] = 0.1
+        for road in row:
+            road[1] *= 0.7  # Just 80% of feromon will stay
+            if road[1] < 0.1:  # If the way has < 0.1 feromon, add feromon up to 0.1 (MMAS)
+                road[1] = 0.1
 
     for index, route in enumerate(routes):  # Massive of routes
 
@@ -63,14 +63,14 @@ def solve(table, alpha, betta, n, Q):
                 summ = 0
 
                 # Counting the probabilities of choosing local destination
-                for dista_freo in table_to_use[current_row]:
-                    if not (dista_freo[0] == 0):
-                        summ += (n / (dista_freo[0])) ** betta * dista_freo[1] ** alpha
+                for road in table_to_use[current_row]:
+                    if not (road[0] == 0):
+                        summ += (n / (road[0])) ** betta * road[1] ** alpha
 
-                for dista_freo in table_to_use[current_row]:
-                    if not (dista_freo[0] == 0):
-                        w = (n / (dista_freo[0])) ** betta
-                        r = dista_freo[1] ** alpha
+                for road in table_to_use[current_row]:
+                    if not (road[0] == 0):
+                        w = (n / (road[0])) ** betta
+                        r = road[1] ** alpha
                         probabilities.append((w * r) / summ)
                     else:
                         probabilities.append(0)
@@ -101,12 +101,12 @@ def solve(table, alpha, betta, n, Q):
                     route += str(counting) + " "
 
                 # Cleaning the column with the element we chose as a local destination
-                for iii, delete_column in enumerate(table_to_use):
-                    table_to_use[iii][current_row][0] = 0
+                for i, delete_column in enumerate(table_to_use):
+                    table_to_use[i][current_row][0] = 0
 
                 # Cleaning the row with the element we chose as a local destination
-                for iii, delete_row in enumerate(table_to_use[current_row]):
-                    table_to_use[current_row][iii][0] = 0
+                for i, delete_row in enumerate(table_to_use[current_row]):
+                    table_to_use[current_row][i][0] = 0
 
                 current_row = counting
 
