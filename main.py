@@ -12,13 +12,13 @@ def build_source_table(filename):
 
         for line in lines:
             from_city_to_others = []
-            elements1 = line.split(' ')
+            departure = line.split(' ')
 
             for l in lines:
-                elements2 = l.split(' ')
+                destination = l.split(' ')
                 from_city_to_others.append(
-                    [math.sqrt((float(elements1[1]) - float(elements2[1])) ** 2
-                               + (float(elements1[2]) - float(elements2[2])) ** 2), 0.5])
+                    [math.sqrt((float(departure[1]) - float(destination[1])) ** 2
+                               + (float(departure[2]) - float(destination[2])) ** 2), 0.5])
             source_massive.append(from_city_to_others)
 
     return source_massive
@@ -76,7 +76,7 @@ def solve(table, alpha, betta, n, Q):
                         probabilities.append(0)
 
                 counting = 0
-                if not (iteration % 4 == 0) or (iteration == 0):  # Simple ants
+                if not (iteration % 10 == 0) or (iteration == 0):  # Simple ants
                     random_number = random.uniform(0, 1)
 
                     for index_local, probability in enumerate(probabilities):
@@ -120,7 +120,7 @@ def solve(table, alpha, betta, n, Q):
                 best_route = route
                 print(best_length)
 
-            if not (iteration % 4 == 0) or (iteration == 0):
+            if not (iteration % 10 == 0) or (iteration == 0):
                 amountOfFeromonToAdd.append(Q / length)
             else:
                 amountOfFeromonToAdd.append(Q * 1.7 / length)  # If this ant is "elite", add more feromon
@@ -130,45 +130,41 @@ def solve(table, alpha, betta, n, Q):
     return best_length, best_route
 
 
-if __name__ == '__main__':
-
-    table = build_source_table('data_tsp.txt')
-    final_length, route = solve(table, 1.0, 4.0, 100, 320)
-    print("\nBest ant-trip-length: ", final_length, " Best ant-trip:\n", route, "\n")
-
+def draw(file_name, route, length):
     points_array = []
 
-    with open('data_tsp.txt', 'r') as file:
+    with open(file_name, 'r') as file:
         for line in file:
             parts = line.split()
-            point_id = int(parts[0])
             x_coordinate = float(parts[1])
             y_coordinate = float(parts[2])
 
             points_array.append([x_coordinate, y_coordinate])
 
-        x, y = zip(*points_array)
+        city_indices = list(map(int, route.strip().split()))
+        route_points = [points_array[index] for index in city_indices]
 
-        plt.scatter(x, y, color='blue', label='Cities')
-        plt.title('Cities')
+        x, y = zip(*route_points)
+
+        plt.plot(x, y, color='#557070', linestyle='--')
+        plt.scatter(x, y, color='green', marker='o', label='Cities')
+        plt.title('Travelling salesman problem: solved!')
         plt.xlabel('X')
         plt.ylabel('Y')
-        plt.legend()
+        plt.legend([f'Length: {length}'])
         plt.show()
 
-        # To see the result-table:
-        # for row in table:
-        #     print(row)
 
-    city_indices = list(map(int, route.strip().split()))
-    route_points = [points_array[index] for index in city_indices]
+if __name__ == '__main__':
 
-    x, y = zip(*route_points)
+    file_name = 'data_tsp.txt'
+    table = build_source_table(file_name)
 
-    plt.plot(x, y, color='#557070', linestyle='--')
-    plt.scatter(x, y, color='green', marker='o', label='Cities')
-    plt.title('Travelling salesman problem: solved!')
-    plt.xlabel('X')
-    plt.ylabel('Y')
-    plt.legend([f'Length: {final_length}'])
-    plt.show()
+    final_length, route = solve(table, 1.0, 4.0, 500, 320)
+    print("\nBest ant-trip-length: ", final_length, " Best ant-trip:\n", route, "\n")
+
+    draw(file_name, route, final_length)
+
+    # To see the result-table:
+    # for row in table:
+    #     print(row)
