@@ -1,6 +1,8 @@
 import copy
 import math
 import random
+import time
+
 import matplotlib.pyplot as plt
 
 
@@ -18,16 +20,23 @@ def build_source_table(filename):
                 destination = l.split(' ')
                 from_city_to_others.append(
                     [math.sqrt((float(departure[1]) - float(destination[1])) ** 2
-                               + (float(departure[2]) - float(destination[2])) ** 2), 0.5])
+                               + (float(departure[2]) - float(destination[2])) ** 2), 0.5, 0])
             source_massive.append(from_city_to_others)
 
     return source_massive
 
 
-def updateferomon(table, routes, amountOfFeromonToAdd):
+def update_coefficient(table):
     for row in table:
         for road in row:
-            road[1] *= 0.7  # Just 80% of feromon will stay
+            road[2] = 0
+    return table
+
+
+def update_feromon(table, routes, amountOfFeromonToAdd):
+    for row in table:
+        for road in row:
+            road[1] *= 0.7  # Just 70% of feromon will stay
             if road[1] < 0.1:  # If the way has < 0.1 feromon, add feromon up to 0.1 (MMAS)
                 road[1] = 0.1
 
@@ -43,33 +52,35 @@ def updateferomon(table, routes, amountOfFeromonToAdd):
     return table  # Returns the edited table
 
 
-def solve(table, alpha, betta, n, Q):
+def solve(table, alpha, betta, c, Q):
     best_route = ""
     best_length = math.inf
+    n = len(table[0])
 
     for iteration in range(250):
         routes = []
         amountOfFeromonToAdd = []
 
-        for index, nextCity in enumerate(table):
+        for index in range(n):
 
-            table_to_use = copy.deepcopy(table)
+            # table_to_use = copy.deepcopy(table)
+            update_coefficient(table)
             probabilities = []
             current_row = index
             route = str(current_row) + " "
             length = 0
 
-            for ant in range(len(nextCity)):
+            for _ in range(n):
                 summ = 0
 
                 # Counting the probabilities of choosing local destination
-                for road in table_to_use[current_row]:
-                    if not (road[0] == 0):
-                        summ += (n / (road[0])) ** betta * road[1] ** alpha
+                for road in table[current_row]:
+                    if not (road[0] == 0) and (road[2] == 0):
+                        summ += (c / (road[0])) ** betta * road[1] ** alpha
 
-                for road in table_to_use[current_row]:
-                    if not (road[0] == 0):
-                        w = (n / (road[0])) ** betta
+                for road in table[current_row]:
+                    if not (road[0] == 0) and (road[2] == 0):
+                        w = (c / (road[0])) ** betta
                         r = road[1] ** alpha
                         probabilities.append((w * r) / summ)
                     else:
@@ -101,12 +112,12 @@ def solve(table, alpha, betta, n, Q):
                     route += str(counting) + " "
 
                 # Cleaning the column with the element we chose as a local destination
-                for i, delete_column in enumerate(table_to_use):
-                    table_to_use[i][current_row][0] = 0
+                for i, delete_column in enumerate(table):
+                    table[i][current_row][2] = 1
 
                 # Cleaning the row with the element we chose as a local destination
-                for i, delete_row in enumerate(table_to_use[current_row]):
-                    table_to_use[current_row][i][0] = 0
+                for i, delete_row in enumerate(table[current_row]):
+                    table[current_row][i][2] = 1
 
                 current_row = counting
 
@@ -125,7 +136,7 @@ def solve(table, alpha, betta, n, Q):
             else:
                 amountOfFeromonToAdd.append(Q * 1.7 / length)  # If this ant is "elite", add more feromon
 
-        updateferomon(table, routes, amountOfFeromonToAdd)
+        update_feromon(table, routes, amountOfFeromonToAdd)
 
     return best_length, best_route
 
@@ -156,6 +167,7 @@ def draw(file_name, route, length):
 
 
 if __name__ == '__main__':
+    start_time = time.time()
 
     file_name = 'data_tsp.txt'
     table = build_source_table(file_name)
@@ -165,6 +177,10 @@ if __name__ == '__main__':
 
     draw(file_name, route, final_length)
 
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+
+    print(elapsed_time)
     # To see the result-table:
     # for row in table:
     #     print(row)
