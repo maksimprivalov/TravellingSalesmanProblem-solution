@@ -1,4 +1,3 @@
-import copy
 import math
 import random
 import time
@@ -46,8 +45,10 @@ def update_feromon(table, routes, amountOfFeromonToAdd):
 
         for i in range(len(route_arr)):
             if i > 0:
-                table[int(route_arr[i - 1])][int(route_arr[i])][1] += amountOfFeromonToAdd[index]  # Add feromon
-                table[int(route_arr[i])][int(route_arr[i - 1])][1] += amountOfFeromonToAdd[index]  # Add feromon
+                table[int(route_arr[i - 1])][int(route_arr[i])][1] \
+                    += amountOfFeromonToAdd[index]  # Add feromon
+                table[int(route_arr[i])][int(route_arr[i - 1])][1] \
+                    += amountOfFeromonToAdd[index]  # Add feromon
 
     return table  # Returns the edited table
 
@@ -111,12 +112,12 @@ def solve(table, alpha, betta, c, Q):
                     length += table[int(route.strip().split(" ")[-1])][counting][0]
                     route += str(counting) + " "
 
-                # Cleaning the column with the element we chose as a local destination
-                for i, delete_column in enumerate(table):
+                # Making the binary element 1 on the column we chose as a local destination
+                for i, _ in enumerate(table):
                     table[i][current_row][2] = 1
 
-                # Cleaning the row with the element we chose as a local destination
-                for i, delete_row in enumerate(table[current_row]):
+                # Making the row element 1 on the column we chose as a local destination
+                for i, _ in enumerate(table[current_row]):
                     table[current_row][i][2] = 1
 
                 current_row = counting
@@ -172,7 +173,7 @@ if __name__ == '__main__':
     file_name = 'data_tsp.txt'
     table = build_source_table(file_name)
 
-    final_length, route = solve(table, 1.0, 4.0, 500, 320)
+    final_length, route = solve(table, 1.0, 4.0, 450, 320)
     print("\nBest ant-trip-length: ", final_length, " Best ant-trip:\n", route, "\n")
 
     draw(file_name, route, final_length)
