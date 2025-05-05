@@ -70,7 +70,7 @@ The algorithm consistently produces routes that are close to the optimal solutio
 
 ## 📈 Visualization
 Final routes are drawn using `matplotlib`, clearly showing the optimal or near-optimal traversal path.
-![Result](https://github.com/maksimprivalov/TravellingSalesmanProblem-solution/blob/main/result.png)
+![Result](https://raw.githubusercontent.com/maksimprivalov/TravellingSalesmanProblem-solution/main/result.png)
 ## 📚 References
 - Thomas Stützle, Holger Hoos – MAX–MIN Ant System
 - FengYun Huang, ShiQiu Jiang – Research of Ant Colony Algorithm with Elite Strategy
