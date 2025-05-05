@@ -69,7 +69,7 @@ min_pheromone = 0.1
 The algorithm consistently produces routes that are close to the optimal solution. Although not guaranteed to always find the shortest path, it effectively balances exploration and exploitation.
 
 ## 📈 Visualization
-Final routes are drawn and saved using `matplotlib`, clearly showing the optimal or near-optimal traversal path.
+Final routes are drawn using `matplotlib`, clearly showing the optimal or near-optimal traversal path.
 ![Result](https://github.com/maksimprivalov/TravellingSalesmanProblem-solution/blob/main/result.png)
 ## 📚 References
 - Thomas Stützle, Holger Hoos – MAX–MIN Ant System
